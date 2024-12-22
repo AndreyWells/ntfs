@@ -1,6 +1,9 @@
 #include <iostream>
 #include<fstream>
 #include<vector>
+#include <iostream>
+#include<fstream>
+#include<vector>
 #include<windows.h>
 #include<cstdint>
 
@@ -87,11 +90,30 @@ int main()
         cout <<" - $LOGGED_UTILITY_STREAM"<<endl;
         break;
         }
-        if (TypeAtrib == 0x30) {
-           int sizeOfName = ntfs_data[offset+88];
-           wchar_t* data = reinterpret_cast<wchar_t*>(&ntfs_data[offset+90]);
-           wstring fileName = wstring(data, sizeOfName);
-           wcout << fileName << endl;
+        if(TypeAtrib == 0x30) {
+            char fileLenght = ntfs_data[offset + 0x58];
+            wchar_t * data = reinterpret_cast<wchar_t*>(&ntfs_data[offset+0x5A]);
+            wstring filename(data,fileLenght);
+            wcout << filename<< endl;
+        }
+        if(TypeAtrib == 0x80) {
+            int ConOffset = offset + (pa_header->conOffset);
+            int ConSize = (pa_header ->atrSize);
+            char * data = reinterpret_cast<char*>(&ntfs_data[ConOffset]);
+            string ConUtf8(data,ConSize);
+            vector<wchar_t>ConUtf16(ConSize,0);
+            MultiByteToWideChar(CP_UTF8,0,ConUtf8.c_str(),ConSize,ConUtf16.data(),ConUtf16.size());
+    //CP_UTF8 — указывает, что исходная строка в кодировке UTF-8.
+    //0 — флаги, которые не используются (стандартное поведение).
+    //ConUtf8.c_str() — указатель на исходную строку в формате UTF-8.
+    //ConSize — длина исходной строки в байтах.
+    //ConUtf16.data() — указатель на буфер, куда будет записана результирующая строка в формате UTF-16.
+    //ConUtf16.size() — размер буфера в символах (не в байтах).
+
+
+            wstring Content(ConUtf16.begin(),ConUtf16.end());
+            wcout << Content << endl;
+
         }
         offset +=pa_header->atrLength;
     }
